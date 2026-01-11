@@ -2,6 +2,13 @@
 
 **Open-source LLM observability platform** - Track costs, latency, and usage across OpenAI, Anthropic, Gemini, and more.
 
+**Open-source LLM observability platform** - Track costs, latency, and usage across OpenAI, Anthropic, Gemini, and more.
+
+<p align="center">
+  <img src="./dashboard-preview.png" width="48%" />
+  <img src="./interaction-preview.png" width="48%" />
+</p>
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/@endlessriver/optimaiz)](https://www.npmjs.com/package/@endlessriver/optimaiz)
 
