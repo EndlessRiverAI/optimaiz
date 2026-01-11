@@ -1,0 +1,67 @@
+{
+  "name": "@endlessriver/optimaiz",
+  "version": "1.0.12",
+  "description": "SDK for LLM observability - track costs, latency, and usage across OpenAI, Anthropic, Gemini, and more",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "llm",
+    "observability",
+    "tracing",
+    "openai",
+    "anthropic",
+    "gemini",
+    "claude",
+    "gpt",
+    "ai",
+    "monitoring",
+    "analytics",
+    "cost-tracking",
+    "token-usage",
+    "langchain",
+    "llmops"
+  ],
+  "author": "Optimaiz",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/optimaiz/optimaiz.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://optimaiz.io",
+  "bugs": {
+    "url": "https://github.com/optimaiz/optimaiz/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
