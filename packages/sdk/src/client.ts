@@ -148,10 +148,14 @@ export class OptimaizClient {
 
     const traceId = data.traceId || generateId();
 
-    return this.request<TraceResponse>('/api/v1/interactions/start', {
+    // Fire network request in the background
+    this.request<TraceResponse>('/api/v1/interactions/start', {
       ...data,
       traceId,
-    });
+    }).catch(err => this.log('Failed to start trace in background', err));
+
+    // Return traceId immediately
+    return { success: true, traceId };
   }
 
   /**
@@ -162,7 +166,11 @@ export class OptimaizClient {
       throw new OptimaizValidationError('traceId is required');
     }
 
-    return this.request<TraceResponse>('/api/v1/interactions/append', data);
+    // Fire network request in background
+    this.request<TraceResponse>('/api/v1/interactions/append', data)
+      .catch(err => this.log('Failed to append response in background', err));
+
+    return { success: true, traceId: data.traceId };
   }
 
   /**
@@ -173,7 +181,11 @@ export class OptimaizClient {
       throw new OptimaizValidationError('traceId is required');
     }
 
-    return this.request<TraceResponse>('/api/v1/interactions/finalize', { traceId });
+    // Fire network request in background
+    this.request<TraceResponse>('/api/v1/interactions/finalize', { traceId })
+      .catch(err => this.log('Failed to finalize trace in background', err));
+
+    return { success: true, traceId };
   }
 
   /**
@@ -187,7 +199,11 @@ export class OptimaizClient {
       throw new OptimaizValidationError('traceId is required');
     }
 
-    return this.request<TraceResponse>('/api/v1/interactions/error', { traceId, error });
+    // Fire network request in background
+    this.request<TraceResponse>('/api/v1/interactions/error', { traceId, error })
+      .catch(err => this.log('Failed to log error in background', err));
+
+    return { success: true, traceId };
   }
 
   /**
@@ -198,10 +214,13 @@ export class OptimaizClient {
       throw new OptimaizValidationError('traceId is required');
     }
 
-    return this.request<TraceResponse>('/api/v1/interactions/feedback', {
+    // Fire network request in background
+    this.request<TraceResponse>('/api/v1/interactions/feedback', {
       traceId,
       feedback,
-    });
+    }).catch(err => this.log('Failed to send feedback in background', err));
+
+    return { success: true, traceId };
   }
 
   /**
@@ -221,10 +240,13 @@ export class OptimaizClient {
       throw new OptimaizValidationError('traceId is required');
     }
 
-    return this.request<TraceResponse>('/api/v1/interactions/tool-execution', {
+    // Fire network request in background
+    this.request<TraceResponse>('/api/v1/interactions/tool-execution', {
       ...data,
       executionTime: data.executionTime || new Date(),
-    });
+    }).catch(err => this.log('Failed to add tool execution in background', err));
+
+    return { success: true, traceId: data.traceId };
   }
 
   /**
@@ -242,7 +264,11 @@ export class OptimaizClient {
       throw new OptimaizValidationError('toolResults must be a non-empty array');
     }
 
-    return this.request<TraceResponse>('/api/v1/interactions/tool-results', data);
+    // Fire network request in background
+    this.request<TraceResponse>('/api/v1/interactions/tool-results', data)
+      .catch(err => this.log('Failed to add tool results in background', err));
+
+    return { success: true, traceId: data.traceId };
   }
 
   /**
@@ -313,58 +339,44 @@ export class OptimaizClient {
     tags?: string[];
     call: () => Promise<T>;
   }): Promise<{ response: T; traceId: string }> {
-    // Start trace (non-blocking on failure)
-    try {
-      await this.startTrace({
-        traceId,
-        agentId,
-        flowId,
-        threadId,
-        sessionId,
-        userId,
-        promptTemplate,
-        promptVariables,
-        tools,
-        provider,
-        model,
-        modelParams,
-        metadata,
-        tags,
-      });
-    } catch (err) {
-      this.log('Failed to start trace', err);
-    }
+    // Start trace (non-blocking)
+    this.startTrace({
+      traceId,
+      agentId,
+      flowId,
+      threadId,
+      sessionId,
+      userId,
+      promptTemplate,
+      promptVariables,
+      tools,
+      provider,
+      model,
+      modelParams,
+      metadata,
+      tags,
+    }).catch(err => this.log('Failed to start trace', err));
 
     try {
       // Execute the LLM call
       const response = await call();
 
-      // Append response (non-blocking on failure)
-      try {
-        await this.appendResponse({ traceId, rawResponse: response, provider, model });
-      } catch (err) {
-        this.log('Failed to append response', err);
-      }
+      // Append response (non-blocking)
+      this.appendResponse({ traceId, rawResponse: response, provider, model })
+        .catch(err => this.log('Failed to append response', err));
 
-      // Finalize trace (non-blocking on failure)
-      try {
-        await this.finalizeTrace(traceId);
-      } catch (err) {
-        this.log('Failed to finalize trace', err);
-      }
+      // Finalize trace (non-blocking)
+      this.finalizeTrace(traceId)
+        .catch(err => this.log('Failed to finalize trace', err));
 
       return { response, traceId };
     } catch (err: any) {
       // Log error (non-blocking)
-      try {
-        await this.logError(traceId, {
-          message: err.message,
-          code: err.code || 'unknown_error',
-          details: err.stack,
-        });
-      } catch (logErr) {
-        this.log('Failed to log error', logErr);
-      }
+      this.logError(traceId, {
+        message: err.message,
+        code: err.code || 'unknown_error',
+        details: err.stack,
+      }).catch(logErr => this.log('Failed to log error', logErr));
 
       throw err;
     }
